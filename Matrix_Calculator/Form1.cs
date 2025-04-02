@@ -53,8 +53,64 @@ namespace Matrix_Calculator
             else
                 radioButton_Float.ForeColor = Color.White;
         }
-        
+
         /*————————————————VALIDATE INPUT————————————————*/
+        private void textBox_Degree_TextChanged(object sender, EventArgs e)
+        {
+            if (int.TryParse(textBox_Degree.Text, out int degree))
+            {
+                if (degree > 20 || degree < -20)
+                {
+                    Message_Error("Степень должна быть в диапазоне от -20 до 20");
+                    textBox_Degree.Text = "0";
+                    return;
+
+                }
+            }
+            textBox_TextChanged(sender, e);
+
+        }
+        private void textBox_Multiplier_TextChanged(object sender, EventArgs e)
+        {
+            if (double.TryParse(textBox_Multiplier.Text, out double multiplier))
+            {
+                if (Math.Abs(multiplier) > 1e6)
+                {
+                    Message_Error("Множитель слишком большой. Максимальное значение: 1 000 000");
+                    textBox_Multiplier.Text = "0";
+                    return;
+                }
+            }
+            textBox_TextChanged(sender, e);
+        }
+        private void textBox_Min_Value_TextChanged(object sender, EventArgs e)
+        {
+            if (double.TryParse(textBox_Fill_Min.Text, out double max))
+            {
+                if (Math.Abs(max) > 1e6)
+                {
+                    Message_Error("Значение слишком большое. Максимальное значение: 1 000 000");
+                    textBox_Fill_Min.Text = "0";
+                    return;
+                }
+            }
+            textBox_TextChanged(sender, e);
+        }
+        private void textBox_Max_Value_TextChanged(object sender, EventArgs e)
+        {
+            if (double.TryParse(textBox_Fill_Max.Text, out double min))
+            {
+                if (Math.Abs(min) > 1e6)
+                {
+                    Message_Error("Значение слишком большое. Максимальное значение: 1 000 000");
+                    textBox_Fill_Max.Text = "0";
+                    return;
+                }
+            }
+            textBox_TextChanged(sender, e);
+        }
+
+
         private void textBox_KeyPress(object sender, KeyPressEventArgs e)
         {
             TextBox textBox = (TextBox)sender;
@@ -417,12 +473,26 @@ namespace Matrix_Calculator
                     string value = dgv.Rows[i].Cells[j].Value?.ToString() ?? "0";
                     if (double.TryParse(value, out double num))
                     {
-                        if (Math.Abs(num) >= 1e15)
+                        if (double.IsInfinity(num))
+                        {
+                            value = "∞";
+                        }
+                        else if (double.IsNaN(num))
+                        {
+                            value = "NaN";
+                        }
+                        else if (Math.Abs(num) >= 1e15)
+                        {
                             value = num.ToString("0.###e+0");
+                        }
                         else if (Math.Abs(num) >= 1e6)
+                        {
                             value = num.ToString("#,###");
+                        }
                         else if (value.Contains(",") || value.Contains("."))
+                        {
                             value = Math.Round(num, 4).ToString();
+                        }
                     }
 
                     sb.Append(value.PadLeft(15));
@@ -774,6 +844,14 @@ namespace Matrix_Calculator
 
             if (double.TryParse(textBox_Degree.Text, out double power))
             {
+                if (Math.Abs(power) > 10)
+                {
+                    var result = MessageBox.Show($"Вы действительно хотите возвести матрицу в степень {power}? Это может занять много времени и привести к большим числам.",
+                                               "Attention",
+                                               MessageBoxButtons.YesNo);
+                    if (result != DialogResult.Yes) return;
+                }
+
                 Matrix_Power(Grid, power);
                 Add_To_History($"Матрица возведена в степень {power}", Grid, null, Grid_Result);
                 Change_Status_Bar($"MATRIX RAISED TO POWER {power}");
@@ -1163,6 +1241,19 @@ namespace Matrix_Calculator
         }
         private void Fill_Matrix_Float(DataGridView matrix, double minValue = -10, double maxValue = 10)
         {
+            if (minValue > maxValue)
+            {
+
+                textBox_Fill_Min.Text = maxValue.ToString();
+                textBox_Fill_Max.Text = minValue.ToString();
+
+                double temp = minValue;
+                minValue = maxValue;
+                maxValue = temp;
+
+                MessageBox.Show("Your value of Min > Max value, we switch your values for ease of perception", "Attention");
+
+            }
             Random rand = new Random();
 
             int maxDecimalPlaces = Math.Max( Count_Decimal_Places(minValue), Count_Decimal_Places(maxValue) );
@@ -1199,7 +1290,19 @@ namespace Matrix_Calculator
         {
             int intMin = (int)Math.Round(minValue);
             int intMax = (int)Math.Round(maxValue);
-            
+            if (intMin > intMax)
+            {
+
+                textBox_Fill_Min.Text = intMax.ToString();
+                textBox_Fill_Max.Text = intMin.ToString();
+
+                int temp = intMin;
+                intMin = intMax;
+                intMax = temp;
+
+                MessageBox.Show("Your value of Min > Max value, we switch your values for ease of perception", "Attention");
+
+            }
             Random rand = new Random();
 
             for (int i = 0; i < matrix.RowCount; i++)
