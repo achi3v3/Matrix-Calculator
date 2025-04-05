@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Data.SqlTypes;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -18,6 +19,7 @@ namespace Matrix_Calculator
             Init_Grid(Grid_Matrix_A, panel_For_Grid_A);
             Init_Grid(Grid_Matrix_B, panel_For_Grid_B);
             Init_Grid(Grid_Result, panel_For_Result);
+
 
             Set_Start_Position();
 
@@ -87,9 +89,9 @@ namespace Matrix_Calculator
         {
             if (double.TryParse(textBox_Fill_Min.Text, out double max))
             {
-                if (Math.Abs(max) > 1e6)
+                if (Math.Abs(max) > 1e9)
                 {
-                    Message_Error("Значение слишком большое. Максимальное значение: 1 000 000");
+                    Message_Error("Значение слишком большое. Максимальное значение: 1,000,000,000");
                     textBox_Fill_Min.Text = "0";
                     return;
                 }
@@ -100,9 +102,9 @@ namespace Matrix_Calculator
         {
             if (double.TryParse(textBox_Fill_Max.Text, out double min))
             {
-                if (Math.Abs(min) > 1e6)
+                if (Math.Abs(min) > 1e9)
                 {
-                    Message_Error("Значение слишком большое. Максимальное значение: 1 000 000");
+                    Message_Error("Значение слишком большое. Максимальное значение: 1,000,000,000");
                     textBox_Fill_Max.Text = "0";
                     return;
                 }
@@ -222,6 +224,51 @@ namespace Matrix_Calculator
             }
         }
 
+        private void Grid_CellEndEdit(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex < 0 || e.ColumnIndex < 0) return;
+
+            DataGridView grid = (DataGridView)sender;
+            var cell = grid.Rows[e.RowIndex].Cells[e.ColumnIndex];
+
+            if (Big_Value_Flag(cell.Value))
+            {
+                cell.Value = "0";
+                Message_Error("Вставленное значение превысило лимит и было сброшено\nМаксимальное значение не должно превышать 1*e^12 (1,000,000,000,000)");
+            }
+        }
+
+        private void Grid_CellValueChanged(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex < 0 || e.ColumnIndex < 0) return;
+
+            DataGridView grid = (DataGridView)sender;
+            var cell = grid.Rows[e.RowIndex].Cells[e.ColumnIndex];
+
+            if (Big_Value_Flag(cell.Value))
+            {
+                cell.Value = "0";
+                Message_Error("AB Вставленное значение превысило лимит и было сброшено\nМаксимальное значение не должно превышать 1*e^12 (1,000,000,000,000)");
+            }
+        }
+        private void Grid_Result_CellValueChanged(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex < 0 || e.ColumnIndex < 0) return;
+
+            DataGridView grid = (DataGridView)sender;
+            var cell = grid.Rows[e.RowIndex].Cells[e.ColumnIndex];
+
+            if (Big_Value_Flag(cell.Value))
+            {
+                Clean_Matrix(grid);
+                Message_Error("R Вставленное значение превысило лимит и было сброшено\nМаксимальное значение не должно превышать 1*e^12 (1,000,000,000,000)");
+                return;
+            }
+        }
+        private void Grid_Result_CellEndEdit(object sender, DataGridViewCellEventArgs e)
+        {
+            Validate_Cell_Input(Grid_Result, e);
+        }
         private void Grid_A_CellEndEdit(object sender, DataGridViewCellEventArgs e)
         {
             Validate_Cell_Input(Grid_Matrix_A, e);
@@ -364,8 +411,8 @@ namespace Matrix_Calculator
             string text = tb.Text;
             int pos = tb.SelectionStart;
 
-            // Автоматическая коррекция ввода
-            if (text == "-") return; // Разрешаем ввод минуса
+
+            if (text == "-") return;
 
             if (text.StartsWith("-0") && text.Length > 2 && text[2] != ',')
             {
@@ -386,7 +433,7 @@ namespace Matrix_Calculator
         }
         private void Grid_CellLeave(object sender, DataGridViewCellEventArgs e)
         {
-            // Альтернативная валидация при уходе с ячейки
+
             var grid = (DataGridView)sender;
             if (e.RowIndex >= 0 && e.ColumnIndex >= 0)
             {
@@ -664,25 +711,103 @@ namespace Matrix_Calculator
         {
             Multiply_On_Multiplier(sender, e);
         }
+        //private void Multiply_On_Multiplier(object sender, EventArgs e)
+        //{
+
+        //    DataGridView Grid = Get_Active_Grid(comboBox_Choose_Matrix_Operation);
+        //    if ((textBox_Multiplier.Text != string.Empty) && (textBox_Multiplier.Text != "-"))
+        //    {
+        //        Set_Matrix_Size(Grid_Result, panel_For_Result, Grid.ColumnCount, Grid.RowCount);
+
+        //        for (int i = 0; i < Grid.RowCount; i++)
+        //            for (int j = 0; j < Grid.ColumnCount; j++)
+        //                Grid_Result.Rows[i].Cells[j].Value = Convert.ToString((Convert.ToDouble(Grid.Rows[i].Cells[j].Value)) * Convert.ToDouble(textBox_Multiplier.Text));
+
+        //        Add_To_History($"Умножение {comboBox_Choose_Matrix_Operation.Text} на {textBox_Multiplier.Text}", Grid, null, Grid_Result);
+        //        Change_Status_Bar($"{comboBox_Choose_Matrix_Operation.Text} MULTIPLIED ON {textBox_Multiplier.Text}");
+        //    }
+        //    else
+        //        MessageBox.Show("Поле ввода множителя пустое!", "Attention");
+        //}
         private void Multiply_On_Multiplier(object sender, EventArgs e)
         {
+            // Проверка множителя
+            if (string.IsNullOrWhiteSpace(textBox_Multiplier.Text) || textBox_Multiplier.Text == "-")
+            {
+                Message_Error("Введите множитель!");
+                return;
+            }
+
+            if (!double.TryParse(textBox_Multiplier.Text, out double multiplier))
+            {
+                Message_Error("Некорректный множитель!");
+                return;
+            }
 
             DataGridView Grid = Get_Active_Grid(comboBox_Choose_Matrix_Operation);
-            if ((textBox_Multiplier.Text != string.Empty) && (textBox_Multiplier.Text != "-"))
+
+            if (Grid.RowCount == 0 || Grid.ColumnCount == 0)
             {
-                Set_Matrix_Size(Grid_Result, panel_For_Result, Grid.ColumnCount, Grid.RowCount);
-
-                for (int i = 0; i < Grid.RowCount; i++)
-                    for (int j = 0; j < Grid.ColumnCount; j++)
-                        Grid_Result.Rows[i].Cells[j].Value = Convert.ToString((Convert.ToDouble(Grid.Rows[i].Cells[j].Value)) * Convert.ToDouble(textBox_Multiplier.Text));
-                
-                Add_To_History($"Умножение {comboBox_Choose_Matrix_Operation.Text} на {textBox_Multiplier.Text}", Grid, null, Grid_Result);
-                Change_Status_Bar($"{comboBox_Choose_Matrix_Operation.Text} MULTIPLIED ON {textBox_Multiplier.Text}");
+                Message_Error("Матрица пуста!");
+                return;
             }
-            else
-                MessageBox.Show("Поле ввода множителя пустое!", "Attention");
-        }
 
+            Set_Matrix_Size(Grid_Result, panel_For_Result, Grid.RowCount, Grid.ColumnCount);
+            Grid_Result.RowCount = Grid.RowCount;
+            Grid_Result.ColumnCount = Grid.ColumnCount;
+
+            while (Grid_Result.Rows.Count < Grid.RowCount)
+            {
+                Grid_Result.Rows.Add();
+            }
+
+            for (int i = 0; i < Grid.RowCount; i++)
+            {
+                if (i >= Grid.Rows.Count || i >= Grid_Result.Rows.Count)
+                    continue;
+
+                for (int j = 0; j < Grid.ColumnCount; j++)
+                {
+                    if (j >= Grid.Columns.Count || j >= Grid_Result.Columns.Count)
+                        continue;
+
+                    object cellValue = Grid.Rows[i].Cells[j].Value;
+                    if (cellValue == null || !double.TryParse(cellValue.ToString(), out double value))
+                    {
+                        Grid_Result.Rows[i].Cells[j].Value = "0";
+                        continue;
+                    }
+
+                    double result = value * multiplier;
+                    
+                    if (Big_Value_Flag(result))
+                    {
+                        MessageBox.Show($"Значение в ячейке [{i},{j}] превысит 1*e^12 (1,000,000,000,000)!\nМы вынуждены занулить результирующую матрицу", "Attention");
+                        Clean_Matrix(Grid_Result);
+                        return;
+                    }
+
+                    Grid_Result.Rows[i].Cells[j].Value = result.ToString();
+                }
+            }
+
+
+            Add_To_History($"Умножение {comboBox_Choose_Matrix_Operation.Text} на {multiplier}", Grid, null, Grid_Result);
+            Change_Status_Bar($"{comboBox_Choose_Matrix_Operation.Text} × {multiplier}");
+        }
+        private bool Big_Value_Flag(object value)
+        {
+            if (value == null) return false;
+
+            string strValue = value.ToString();
+            if (string.IsNullOrEmpty(strValue)) return false;
+
+            if (double.TryParse(strValue, out double num))
+            {
+                return Math.Abs(num) > 1e9;
+            }
+            return false;
+        }
         /*————————————————REVERSE MATRIX————————————————*/
         private void Click_Reverse(object sender, EventArgs e)
         {
@@ -817,6 +942,12 @@ namespace Matrix_Calculator
                         double val1 = Convert.ToDouble(Matrix_A.Rows[i].Cells[k].Value ?? "0");
                         double val2 = Convert.ToDouble(Matrix_B.Rows[k].Cells[j].Value ?? "0");
                         sum += val1 * val2;
+                    }
+                    if (Big_Value_Flag(sum))
+                    {
+                        Clean_Matrix(Grid_Result);
+                        Message_Error("R Вставленное значение превысило лимит и было сброшено\nМаксимальное значение не должно превышать 1*e^12 (1,000,000,000,000)");
+                        return;
                     }
 
                     if (j >= Grid_Result.ColumnCount)
@@ -1193,6 +1324,7 @@ namespace Matrix_Calculator
 
         private void Clean_Matrix(DataGridView grid)
         {
+
             for (int i = 0; i < grid.RowCount; i++)
             {
                 for (int j = 0; j < grid.ColumnCount; j++)
@@ -1392,7 +1524,10 @@ namespace Matrix_Calculator
 
             Grid.RowCount = rows;
             Grid.ColumnCount = columns;
-
+            while (Grid.Rows.Count < rows)
+            {
+                Grid.Rows.Add();
+            }
             for (int i = 0; i < rows; i++)
             {
                 for (int j = 0; j < columns; j++)

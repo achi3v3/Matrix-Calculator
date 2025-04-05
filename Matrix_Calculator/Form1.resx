@@ -675,13 +675,10 @@
   <metadata name="comboBox_Choose_Matrix_Operation.Locked" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
-  <metadata name="comboBox_Choose_Matrix_Operation.Locked" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <data name="button_A_X.BackgroundImage" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAAgAAAAIACAYAAAD0eNT6AAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAN
-        0QAADdEBwivf4wAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAADELSURBVHhe7d3b
+        0AAADdABEGw9BwAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAADELSURBVHhe7d3b
         q67Xdd/xrS3ZWyfXZ0e0JGkdbdVBabV36pZYVuKQ4DRxoMVNLnrbm0ILtQwCxzS4iZPcuBifZOui0D/A
         FaTQixZqRbbsf8BQilosQ5reuqJQYudQdXWMteejPfZaY631vnPMOZ95+E74gD2091rv+zxzzt8PEtvX
         Tk5O0IisG+IT4uviNfG6eEl8Ttz0/g4AzETWk+Lz4mWhd+D3xYviOfGw93dQhztEebKeFq8K/TeeH4lP
